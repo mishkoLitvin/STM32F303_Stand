@@ -73,7 +73,7 @@ static void MX_TIM1_Init(void);
 static void MX_TIM6_Init(void);
 static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
-#define valueArraySize 330
+#define valueArraySize 100
 static uint16_t valueArray[valueArraySize];
 /* USER CODE END PFP */
 
@@ -129,10 +129,10 @@ int main(void)
 //  HAL_DAC_Start(&hdac2, DAC_CHANNEL_1);
 
   uint16_t cnt = 1;
-  htim6.Instance->ARR = 200;
+  htim6.Instance->ARR = 1;
 
   for(uint16_t i = 0; i<valueArraySize; i++)
-	  valueArray[i] = 150+500*(sin(6.28*(i)/(valueArraySize-1))+1);
+	  valueArray[i] = 150+1000*(sin(6.28*(i)/(valueArraySize))+1);
   HAL_TIM_Base_Start(&htim6);
 
   HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, valueArray, valueArraySize, DAC_ALIGN_12B_R);
@@ -157,14 +157,11 @@ int main(void)
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4);
   HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1);
   HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_2);
-//  HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_3);
-
-//  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4);
+  HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_3);
 
 
-
-  const uint8_t sineArrSize = 1000;
-  uint16_t sineArr[1000] = {0};
+  const uint8_t sineArrSize = 200;
+  uint16_t sineArr[200] = {0};
 
   for(uint8_t i = 0; i<sineArrSize; i++){ // FULL SINE WAVE
 	  sineArr[i] = (htim1.Instance->ARR/2-1)*(sin(6.28*i/sineArrSize)+1);
@@ -177,7 +174,7 @@ int main(void)
   while (1)
   {
 //	  HAL_GPIO_WritePin(LD_1_GPIO_Port, LD_1_Pin, cnt < 250);
-//	  HAL_SPI_Transmit(&hspi1, data, 10, 1);
+	  HAL_SPI_Transmit(&hspi1, data, 10, 1);
 //	  HAL_DAC_SetValue(&hdac2, DAC_CHANNEL_1, DAC_ALIGN_12B_R, cnt*8);
 
 	  cnt++;
@@ -191,9 +188,9 @@ int main(void)
 	  htim1.Instance->CCR4 = sineArr[cnt];;
 
 
-//	  HAL_Delay(1000);
+	  HAL_Delay(100);
 //	  htim6.Instance->ARR = cnt;
-//	  HAL_UART_Transmit(&huart2, &cnt, 2, 1);
+	  HAL_UART_Transmit(&huart2, &cnt, 2, 1);
 
 
     /* USER CODE END WHILE */
