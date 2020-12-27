@@ -73,7 +73,7 @@ static void MX_TIM1_Init(void);
 static void MX_TIM6_Init(void);
 static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
-#define valueArraySize 100
+#define valueArraySize 330
 static uint16_t valueArray[valueArraySize];
 /* USER CODE END PFP */
 
@@ -129,41 +129,72 @@ int main(void)
 //  HAL_DAC_Start(&hdac2, DAC_CHANNEL_1);
 
   uint16_t cnt = 1;
+  htim6.Instance->ARR = 200;
 
   for(uint16_t i = 0; i<valueArraySize; i++)
-	  valueArray[i] = 147+500*(sin(6.28*(i)/(valueArraySize-1))+1);
+	  valueArray[i] = 150+500*(sin(6.28*(i)/(valueArraySize-1))+1);
   HAL_TIM_Base_Start(&htim6);
 
   HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, valueArray, valueArraySize, DAC_ALIGN_12B_R);
-  htim6.Instance->ARR = 1;
 
   uint8_t data[10];
 
   HAL_TIM_Base_Start(&htim1);
 
 
-  htim1.Instance->ARR = 9;
+  htim1.Instance->ARR = 10;
+//
+  uint16_t pwm = 5;
 
-  htim1.Instance->CCR1 = 5;
-  htim1.Instance->CCR2 = 5;
-  htim1.Instance->CCR3 = 5;
-  htim1.Instance->CCR4 = 5;
+  htim1.Instance->CCR1 = pwm;
+  htim1.Instance->CCR2 = pwm;
+  htim1.Instance->CCR3 = pwm;
+  htim1.Instance->CCR4 = pwm;
 
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4);
+  HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1);
+  HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_2);
+//  HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_3);
+
+//  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4);
+
+
+
+  const uint8_t sineArrSize = 1000;
+  uint16_t sineArr[1000] = {0};
+
+  for(uint8_t i = 0; i<sineArrSize; i++){ // FULL SINE WAVE
+	  sineArr[i] = (htim1.Instance->ARR/2-1)*(sin(6.28*i/sineArrSize)+1);
+  }
+
+//  for(uint8_t i = 0; i<sineArrSize/2; i++){ //HALF SINE WAVE
+//	  sineArr[i] = (htim1.Instance->ARR-1)*(sin(6.28*i/sineArrSize));
+//  }
+
   while (1)
   {
 //	  HAL_GPIO_WritePin(LD_1_GPIO_Port, LD_1_Pin, cnt < 250);
-	  HAL_SPI_Transmit(&hspi1, data, 10, 1);
+//	  HAL_SPI_Transmit(&hspi1, data, 10, 1);
 //	  HAL_DAC_SetValue(&hdac2, DAC_CHANNEL_1, DAC_ALIGN_12B_R, cnt*8);
 
-	  HAL_Delay(1000);
-//	  htim6.Instance->ARR = cnt;
-	  HAL_UART_Transmit(&huart2, &cnt, 2, 1);
-	  if(cnt>2000) cnt = 1;
 	  cnt++;
+	  if(cnt>=sineArrSize) cnt = 0;
+
+//	  pwm = 14*(sin(6.28*cnt/100)+1);
+
+	  htim1.Instance->CCR1 = sineArr[cnt];
+	  htim1.Instance->CCR2 = sineArr[(cnt+sineArrSize/2)%sineArrSize];
+	  htim1.Instance->CCR3 = sineArr[(cnt+sineArrSize/2)%sineArrSize];
+	  htim1.Instance->CCR4 = sineArr[cnt];;
+
+
+//	  HAL_Delay(1000);
+//	  htim6.Instance->ARR = cnt;
+//	  HAL_UART_Transmit(&huart2, &cnt, 2, 1);
+
 
     /* USER CODE END WHILE */
 
@@ -182,7 +213,7 @@ void SystemClock_Config(void)
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
   RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
-  /** Initializes the CPU, AHB and APB busses clocks 
+  /** Initializes the CPU, AHB and APB busses clocks
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS;
@@ -196,7 +227,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  /** Initializes the CPU, AHB and APB busses clocks 
+  /** Initializes the CPU, AHB and APB busses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
@@ -238,7 +269,7 @@ static void MX_ADC1_Init(void)
   /* USER CODE BEGIN ADC1_Init 1 */
 
   /* USER CODE END ADC1_Init 1 */
-  /** Common config 
+  /** Common config
   */
   hadc1.Instance = ADC1;
   hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
@@ -258,14 +289,14 @@ static void MX_ADC1_Init(void)
   {
     Error_Handler();
   }
-  /** Configure the ADC multi-mode 
+  /** Configure the ADC multi-mode
   */
   multimode.Mode = ADC_MODE_INDEPENDENT;
   if (HAL_ADCEx_MultiModeConfigChannel(&hadc1, &multimode) != HAL_OK)
   {
     Error_Handler();
   }
-  /** Configure Regular Channel 
+  /** Configure Regular Channel
   */
   sConfig.Channel = ADC_CHANNEL_1;
   sConfig.Rank = ADC_REGULAR_RANK_1;
@@ -300,14 +331,14 @@ static void MX_DAC1_Init(void)
   /* USER CODE BEGIN DAC1_Init 1 */
 
   /* USER CODE END DAC1_Init 1 */
-  /** DAC Initialization 
+  /** DAC Initialization
   */
   hdac1.Instance = DAC1;
   if (HAL_DAC_Init(&hdac1) != HAL_OK)
   {
     Error_Handler();
   }
-  /** DAC channel OUT1 config 
+  /** DAC channel OUT1 config
   */
   sConfig.DAC_Trigger = DAC_TRIGGER_T6_TRGO;
   sConfig.DAC_OutputBuffer = DAC_OUTPUTBUFFER_ENABLE;
@@ -315,7 +346,7 @@ static void MX_DAC1_Init(void)
   {
     Error_Handler();
   }
-  /** DAC channel OUT2 config 
+  /** DAC channel OUT2 config
   */
   sConfig.DAC_Trigger = DAC_TRIGGER_NONE;
   sConfig.DAC_OutputSwitch = DAC_OUTPUTSWITCH_ENABLE;
@@ -346,14 +377,14 @@ static void MX_DAC2_Init(void)
   /* USER CODE BEGIN DAC2_Init 1 */
 
   /* USER CODE END DAC2_Init 1 */
-  /** DAC Initialization 
+  /** DAC Initialization
   */
   hdac2.Instance = DAC2;
   if (HAL_DAC_Init(&hdac2) != HAL_OK)
   {
     Error_Handler();
   }
-  /** DAC channel OUT1 config 
+  /** DAC channel OUT1 config
   */
   sConfig.DAC_Trigger = DAC_TRIGGER_NONE;
   sConfig.DAC_OutputSwitch = DAC_OUTPUTSWITCH_ENABLE;
@@ -395,13 +426,13 @@ static void MX_I2C1_Init(void)
   {
     Error_Handler();
   }
-  /** Configure Analogue filter 
+  /** Configure Analogue filter
   */
   if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
   {
     Error_Handler();
   }
-  /** Configure Digital filter 
+  /** Configure Digital filter
   */
   if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
   {
@@ -473,9 +504,9 @@ static void MX_TIM1_Init(void)
 
   /* USER CODE END TIM1_Init 1 */
   htim1.Instance = TIM1;
-  htim1.Init.Prescaler = 1;
+  htim1.Init.Prescaler = 0;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 100;
+  htim1.Init.Period = 10;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
@@ -491,7 +522,7 @@ static void MX_TIM1_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 0;
+  sConfigOC.Pulse = 5;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
@@ -516,7 +547,7 @@ static void MX_TIM1_Init(void)
   sBreakDeadTimeConfig.OffStateRunMode = TIM_OSSR_DISABLE;
   sBreakDeadTimeConfig.OffStateIDLEMode = TIM_OSSI_DISABLE;
   sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
-  sBreakDeadTimeConfig.DeadTime = 0;
+  sBreakDeadTimeConfig.DeadTime = 4;
   sBreakDeadTimeConfig.BreakState = TIM_BREAK_DISABLE;
   sBreakDeadTimeConfig.BreakPolarity = TIM_BREAKPOLARITY_HIGH;
   sBreakDeadTimeConfig.BreakFilter = 0;
@@ -608,10 +639,10 @@ static void MX_USART2_UART_Init(void)
 
 }
 
-/** 
+/**
   * Enable DMA controller clock
   */
-static void MX_DMA_Init(void) 
+static void MX_DMA_Init(void)
 {
 
   /* DMA controller clock enable */
@@ -664,7 +695,7 @@ void Error_Handler(void)
   * @retval None
   */
 void assert_failed(uint8_t *file, uint32_t line)
-{ 
+{
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
      tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
