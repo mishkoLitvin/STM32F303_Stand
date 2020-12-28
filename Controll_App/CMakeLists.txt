@@ -24,15 +24,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #    endif()
 #endif()
 
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Quick SerialPort REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Quick SerialPort REQUIRED)
-
 set(PROJECT_SOURCES
-    appcontroller.cpp
     appcontroller.h
+    appcontroller.cpp
+    protocol.h
     main.cpp
     qml.qrc
     )
+
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Quick SerialPort REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Quick SerialPort REQUIRED)
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(Controll_App
@@ -53,4 +54,4 @@ endif()
 target_compile_definitions(Controll_App
   PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
 target_link_libraries(Controll_App
-  PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Quick)
+  PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Quick Qt${QT_VERSION_MAJOR}::SerialPort)

@@ -11,11 +11,23 @@ ApplicationWindow {
     visible: true
     title: qsTr("Hello World")
 
+    AppController{
+        id: mainController
+    }
+
     menuBar: MenuBar {
             Menu {
                 title: qsTr("&File")
-                Action{
-                    id: portList; text: "  "
+                Menu {
+                    title: qsTr("Avariable ports:")
+                    enabled: mainController.serialPortList.length
+                    Repeater{
+                        model: mainController.serialPortList
+                        ToolButton{
+                            text: mainController.serialPortList[index]
+                            onClicked: mainController.connectPort(index)
+                        }
+                    }
                 }
             }
     }
