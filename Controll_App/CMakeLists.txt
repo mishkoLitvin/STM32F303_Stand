@@ -32,6 +32,15 @@ set(PROJECT_SOURCES
     qml.qrc
     )
 
+
+file(GLOB QmlFiles
+    "*.qml"
+    "qml/*.qml")
+file(GLOB SrcFiles "*.qrc")
+
+add_custom_target(${PROJECT_NAME}-qml-main SOURCES ${QmlFiles})
+add_custom_target(${PROJECT_NAME}-resources SOURCES ${SrcFiles})
+
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Quick SerialPort REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Quick SerialPort REQUIRED)
 

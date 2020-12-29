@@ -9,6 +9,8 @@ AppController::AppController(QObject *parent) : QObject(parent)
     connect(m_serialPort, &QSerialPort::readyRead, this, &AppController::onSerialReadyRead);
 
     this->rescanPorts();
+
+
 }
 
 AppController::~AppController()
@@ -42,6 +44,34 @@ void AppController::connectPort(int index)
         m_serialPort->close();
 
     qDebug()<<"AppController::connectPort"<<index<<m_ports.at(index).portName()<<m_serialPort->open(QIODevice::ReadWrite);
+}
+
+void AppController::setWaveAmplitude(int value)
+{
+    if(m_controlData.bits.amplitude == value) return;
+    m_controlData.bits.amplitude = value;
+
+    emit waveAmplitudeChanged();
+}
+
+void AppController::setWaveFrequency(int value)
+{
+    if(m_controlData.bits.frequency == value) return;
+    m_controlData.bits.frequency = value;
+
+    emit waveFrequencyChanged();
+}
+
+void AppController::setWaveType(int value)
+{
+    if(m_controlData.bits.wave_type == value) return;
+    if(value<WaveType::None || value >= WaveType::Last) {
+        qWarning()<<"AppController::setWaveType cant set"<<value<<"as wave type";
+        return;
+    }
+    m_controlData.bits.wave_type = static_cast<WaveType>(value);
+
+    emit waveTypeChanged();
 }
 
 void AppController::onSerialReadyRead(){
